@@ -136,17 +136,22 @@ class UniswapV2Client(UniswapObject):
 
     ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
 
-    ABI = json.load(open(os.path.abspath(f"{os.path.dirname(os.path.abspath(__file__))}/assets/" + "IUniswapV2Factory.json")))["abi"]
+    with open('IUniswapV2Factory.json', 'r') as file:
+        ABI = json.load(file)['abi']
 
     ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-    ROUTER_ABI = json.load(open(os.path.abspath(f"{os.path.dirname(os.path.abspath(__file__))}/assets/" + "IUniswapV2Router02.json")))["abi"]
+  
+    with open('IUniswapV2Router02.json', 'r') as file:
+        ROUTER_ABI = json.load(file)['abi']
+
 
     MAX_APPROVAL_HEX = "0x" + "f" * 64
     MAX_APPROVAL_INT = int(MAX_APPROVAL_HEX, 16)
-    ERC20_ABI = json.load(open(os.path.abspath(f"{os.path.dirname(os.path.abspath(__file__))}/assets/" + "IUniswapV2ERC20.json")))["abi"]
 
-    PAIR_ABI = json.load(open(os.path.abspath(f"{os.path.dirname(os.path.abspath(__file__))}/assets/" + "IUniswapV2Pair.json")))["abi"]
-
+    with open('IUniswapV2ERC20.json', 'r') as file:
+        ERC20_ABI = json.load(file)['abi']
+    with open('IUniswapV2Pair.json', 'r') as file:
+        PAIR_ABI = json.load(file)['abi']
     def __init__(self, address, private_key, provider=None):
         super().__init__(address, private_key, provider)
         self.contract = self.conn.eth.contract(
@@ -344,172 +349,7 @@ class UniswapV2Client(UniswapObject):
         params = self._create_transaction_params()
         return self._send_transaction(func, params)
 
-    def remove_liquidity_with_permit(
-            self, token_a, token_b, liquidity, min_a, min_b, to, deadline, approve_max, v, r, s):
-        """
-        Remove liquidity from an ERC20-ERC20 pool without pre-approval, thanks to permit.
 
-        :param token_a: Address of a pool token.
-        :param token_b: Address of a pool token.
-        :param liquidity: Amount of liquidity tokens to remove.
-        :param min_a: Minimum amount of token_a that must be received for the transaction not to revert.
-        :param min_b: Minimum amount of token_b that must be received for the transaction not to revert.
-        :param to: Address of the recipient for the underlying assets.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :param approve_max: Whether or not the approval amount in the signature is for liquidity or uint(-1).
-        :param v: Component v of the permit signature.
-        :param r: Component r of the permit signature.
-        :param s: Component s of the permit signature.
-        :return:
-            - amount_a - Amount of token_a received.
-            - amount_b - Amount of token_b received.
-        """
-        func = self.router.functions.removeLiquidityWithPermit(
-            token_a, token_b, liquidity, min_a, min_b, to, deadline, approve_max, v, r, s)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def remove_liquidity_eth_with_permit(
-            self,  token, liquidity, min_token, min_eth, to, deadline, approve_max, v, r, s):
-        """
-        Remove liquidity from an ERC20-WETH pool and receive ETH without pre-approval, thanks to permit.
-
-        :param token: Address of a pool token.
-        :param liquidity: Amount of liquidity tokens to remove.
-        :param min_token: Minimum amount of token that must be received for the transaction not to revert.
-        :param min_eth: Minimum amount of ETH that must be received for the transaction not to revert.
-        :param to: Address of the recipient for the underlying assets.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :param approve_max: Whether or not the approval amount in the signature is for liquidity or uint(-1).
-        :param v: Component v of the permit signature.
-        :param r: Component r of the permit signature.
-        :param s: Component s of the permit signature.
-        :return:
-            - amount_token - Amount of token received.
-            - amount_eth - Amount of ETH received.
-        """
-        func = self.router.functions.removeLiquidityETHWithPermit(
-            token, liquidity, min_token, min_eth, to, deadline, approve_max, v, r, s)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def swap_exact_tokens_for_tokens(self, amount, min_out, path, to, deadline):
-        """
-        Swaps an exact amount of input tokens for as many output tokens as
-        possible, along the route determined by the path. The first element of
-        path is the input token, the last is the output token, and any intermediate
-        elements represent intermediate pairs to trade through (if for example,
-        a direct pair does not exist)
-
-        :param amount: Amount of input tokens to send.
-        :param min_out: Minimum amount of output tokens that must be received for the transaction not to revert.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the output tokens.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        self.approve(path[0], amount)
-        func = self.router.functions.swapExactTokensForTokens(amount, min_out, path, to, deadline)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def swap_tokens_for_exact_tokens(self, amount_out, amount_in_max, path, to, deadline):
-        """
-        Receive an exact amount of output tokens for as few input tokens as
-        possible, along the route determined by the path. The first element of
-        path is the input token, the last is the output token, and any intermediate
-        elements represent intermediate pairs to trade through (if for example,
-        a direct pair does not exist).
-
-        :param amount_out: Amount of tokens to receive.
-        :param amount_in_max: Maximum amount of input tokens that can be required before the transaction reverts.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the output tokens.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        self.approve(path[0], amount_out)
-        func = self.router.functions.swapTokensForExactTokens(amount_out, amount_in_max, path, to, deadline)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def swap_exact_eth_for_tokens(self, amount, min_out, path, to, deadline):
-        """
-        Swaps an exact amount of ETH for as many output tokens as possible,
-        along the route determined by the path. The first element of path must
-        be WETH, the last is the output token, and any intermediate elements
-        represent intermediate pairs to trade through (if for example, a direct
-        pair does not exist).
-
-        :param amount: Amount of ETH to send.
-        :param min_out: Minimum amount of output tokens that must be received for the transaction not to revert.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the output tokens.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        func = self.router.functions.swapExactETHForTokens(min_out, path, to, deadline)
-        params = self._create_transaction_params(amount)
-        return self._send_transaction(func, params)
-
-    def swap_tokens_for_exact_eth(self, amount_out, amount_in_max, path, to, deadline):
-        """
-        Receive an exact amount of ETH for as few input tokens as possible,
-        along the route determined by the path. The first element of path is the
-        input token, the last must be WETH, and any intermediate elements
-        represent intermediate pairs to trade through (if for example, a direct
-        pair does not exist).
-
-        :param amount_out: Amount of ETH to receive.
-        :param amount_in_max: Maximum amount of input tokens that can be required before the transaction reverts.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the ETH.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        self.approve(path[0], amount_in_max)
-        func = self.router.functions.swapTokensForExactETH(amount_out, amount_in_max, path, to, deadline)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def swap_exact_tokens_for_eth(self, amount, min_out, path, to, deadline):
-        """
-        Swaps an exact amount of tokens for as much ETH as possible, along
-        the route determined by the path. The first element of path is the input
-        token, the last must be WETH, and any intermediate elements represent
-        intermediate pairs to trade through (if for example, a direct pair does
-        not exist).
-
-        :param amount: Amount of input tokens to send.
-        :param min_out: Minimum amount of output tokens that must be received for the transaction not to revert.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the ETH.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        self.approve(path[0], amount)
-        func = self.router.functions.swapExactTokensForETH(amount, min_out, path, to, deadline)
-        params = self._create_transaction_params()
-        return self._send_transaction(func, params)
-
-    def swap_eth_for_exact_tokens(self, amount_out, amount_in_max, path, to, deadline):
-        """
-        Receive an exact amount of tokens for as little ETH as possible, along
-        the route determined by the path. The first element of path must be
-        WETH, the last is the output token and any intermediate elements
-        represent intermediate pairs to trade through (if for example, a direct
-        pair does not exist).
-
-        :param amount_out: Amount of tokens to receive.
-        :param amount_in_max: Maximum amount of ETH that can be required before the transaction reverts.
-        :param path: Array of token addresses (pools of consecutive pair of addresses must exist and have liquidity).
-        :param to: Address of the recipient for the output tokens.
-        :param deadline: Unix timestamp after which the transaction will revert.
-        :return: Input token amount and all subsequent output token amounts.
-        """
-        func = self.router.functions.swapETHForExactTokens(amount_out, path, to, deadline)
-        params = self._create_transaction_params(amount_in_max)
-        return self._send_transaction(func, params)
 
     # Pair Read-Only Functions
     # -----------------------------------------------------------
@@ -568,51 +408,3 @@ class UniswapV2Client(UniswapObject):
         pair_contract = self.conn.eth.contract(
             address=Web3.toChecksumAddress(pair), abi=UniswapV2Client.PAIR_ABI)
         return pair_contract.functions.price0CumulativeLast().call()
-
-    def get_price_1_cumulative_last(self, pair):
-        """
-        Gets the commutative price of the pair calculated relatively
-        to token_1.
-
-        :param pair: Address of the pair.
-        :return: Commutative price relative to token_1.
-        """
-        pair_contract = self.conn.eth.contract(
-            address=Web3.toChecksumAddress(pair), abi=UniswapV2Client.PAIR_ABI)
-        return pair_contract.functions.price1CumulativeLast().call()
-
-    def get_k_last(self, pair):
-        """
-        Returns the product of the reserves as of the most recent
-        liquidity event.
-
-        :param pair: Address of the pair.
-        :return: Product of the reserves.
-        """
-        pair_contract = self.conn.eth.contract(
-            address=Web3.toChecksumAddress(pair), abi=UniswapV2Client.PAIR_ABI)
-        return pair_contract.functions.kLast().call()
-
-    def get_amounts_out(self, amount_in, path):
-        assert len(path) >= 2
-        amounts = [amount_in]
-        current_amount = amount_in
-        for p0, p1 in zip(path, path[1:]):
-            r = self.get_reserves(p0, p1)
-            current_amount = UniswapV2Utils.get_amount_out(
-                current_amount, r[0], r[1]
-            )
-            amounts.append(current_amount)
-        return amounts
-
-    def get_amounts_in(self, amount_out, path):
-        assert len(path) >= 2
-        amounts = [amount_out]
-        current_amount = amount_out
-        for p0, p1 in reversed(list(zip(path, path[1:]))):
-            r = self.get_reserves(p0, p1)
-            current_amount = UniswapV2Utils.get_amount_in(
-                current_amount, r[0], r[1]
-            )
-            amounts.insert(0, current_amount)
-        return amounts
