@@ -11,7 +11,7 @@
 ###### pip install python-okx    
 ###### pip install web3
 
-###### add congig.py by yourself
+##### add congig.py by yourself
 
 ###### api_key_bian=''
 ###### api_secret_bian=''
