@@ -13,17 +13,17 @@
 
 ###### add congig.py by yourself
 
-######api_key_bian=''
-######api_secret_bian=''
-######accept_address_bian=''
+###### api_key_bian=''
+###### api_secret_bian=''
+###### accept_address_bian=''
 
-######ok_pass='leodata!1L'
-######api_ok=''
-######apikey_ok=''
-######accept_address_ok=''
+###### ok_pass='leodata!1L'
+###### api_ok=''
+###### apikey_ok=''
+###### accept_address_ok=''
 
-######metamask_address=''
+###### metamask_address=''
 
-######arb_wallet_provider=''
-######arb_wallet_private_key=""
+###### arb_wallet_provider=''
+###### arb_wallet_private_key=""
 
